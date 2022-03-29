@@ -1,3 +1,0 @@
-/home/martin/school/graphics-programming/assignments/hw2/CMakeFiles/rebuild_cache.dir
-/home/martin/school/graphics-programming/assignments/hw2/CMakeFiles/edit_cache.dir
-/home/martin/school/graphics-programming/assignments/hw2/CMakeFiles/main.dir
