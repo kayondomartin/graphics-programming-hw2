@@ -1,8 +1,12 @@
 #version 330 core
-// TODO: define in/out and uniform variables.
+out vec4 FragColor;
+
+in vec3 TexCoords;
+
+uniform samplerCube skyboxTexture;
 
 void main()
 {   
     // mix two texture
-
+    FragColor = texture(skyboxTexture, TexCoords);
 }

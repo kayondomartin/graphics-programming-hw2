@@ -42,21 +42,23 @@ public:
     float Zoom;
 
     // Constructor with vectors
-    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, -1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
     {
         Position = position;
-        Up = up;
+        WorldUp = up;
         Yaw = yaw;
         Pitch = pitch;
+        updateCameraVectors();
     }
 
     // Constructor with scalar values
     Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
     {
-        Up = glm::vec3(upX,upY,upZ);
+        WorldUp = glm::vec3(upX,upY,upZ);
         Position = glm::vec3(posX,posY,posZ);
         Pitch = pitch;
         Yaw = yaw;
+        updateCameraVectors();
     }
 
     // Returns the view matrix calculated using Euler Angles and the LookAt Matrix
@@ -75,7 +77,7 @@ public:
         }
 
         if(direction == LEFT){
-            Position -= glm::normalize(glm::cross(Front,Up)) * MovementSpeed;
+            Position -= Right * MovementSpeed;
         }
 
         if(direction == BACKWARD){
@@ -83,7 +85,7 @@ public:
         }
 
         if(direction == RIGHT){
-            Position += glm::normalize(glm::cross(Front,Up)) * MovementSpeed;
+            Position += Right * MovementSpeed;
         }
     }
 
@@ -107,11 +109,7 @@ public:
             Pitch = -89.0f;
         }
 
-        glm::vec3 front;
-        front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-        front.y = sin(glm::radians(Pitch));
-        front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-        Front = front;
+        updateCameraVectors();
     }
 
     // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
@@ -132,9 +130,15 @@ private:
     // Calculates the front vector from the Camera's (updated) Euler Angles
     void updateCameraVectors()
     {
-        // TODO : fill in
+        
+        glm::vec3 front;
+        front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+        front.y = sin(glm::radians(Pitch));
+        front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+        Front = glm::normalize(front);
 
-
+        Right = glm::normalize(glm::cross(Front, WorldUp));  
+        Up    = glm::normalize(glm::cross(Right, Front));
     }
 };
 #endif

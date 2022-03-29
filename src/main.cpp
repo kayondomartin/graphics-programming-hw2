@@ -88,21 +88,33 @@ int main()
 
     // TODO : define required VAOs(textured cube, skybox, quad)
     // data are defined in geometry_primitives.h
-    unsigned int VBO, VAO;
-    glGenVertexArrays(1,&VAO);
-    glGenBuffers(1, &VBO);
+    unsigned int cubesVBO, cubesVAO;
+    glGenVertexArrays(1,&cubesVAO);
+    glGenBuffers(1, &cubesVBO);
 
-    glBindVertexArray(VAO);
+    glBindVertexArray(cubesVAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, cubesVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(cube_positions_textures), cube_positions_textures, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*sizeof(float),(void*)0);
     glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)(3*sizeof(float)));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*sizeof(float),(void*)0);
+    
     glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)(3*sizeof(float)));
+    
 
+    unsigned int skyBoxVBO, skyBoxVAO;
+    glGenVertexArrays(1, &skyBoxVAO);
+    glGenBuffers(1, &skyBoxVBO);
+
+    glBindVertexArray(skyBoxVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, skyBoxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skybox_positions), skybox_positions, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
     // world space positions of our cubes
     glm::vec3 cubePositions[] = {
@@ -132,31 +144,19 @@ int main()
         grassPositions[i].z = z;
     }
 
-    unsigned int cubeTexture, skyTexture;
-    glGenTextures(1, &cubeTexture);
-    glBindTexture(GL_TEXTURE_2D, cubeTexture);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    Texture cubeTexture("../resources/container.jpg");
 
     // TODO : define textures (container, grass, grass_ground) & cubemap textures (day, night)
-    int width, height, nrChannels;
-    unsigned char* data = stbi_load("../resources/container.jpg", &width, &height, &nrChannels, 0);
-    if(data){
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    }else{
-        std::cout<<"Failed to load texture "<<std::endl;
-    }
-    stbi_image_free(data);
 
     // TODO : set texture & skybox texture uniform value (initialization)
     // e.g) shader.use(), shader.setInt("texture", 0);
+    CubemapTexture cubemapTexture;
 
     shader.use();
     shader.setInt("cubeTexture",0);
+
+    skyboxShader.use();
+    skyboxShader.setInt("skyboxTexture",0);
 
     // render loop
     // -----------
@@ -176,10 +176,6 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, cubeTexture);
-
         shader.use();
         /////////////////////////////////////////////////////
         // TODO : Main Rendering Loop
@@ -195,9 +191,9 @@ int main()
         shader.setMat4("projection", projection);
         shader.setMat4("view", view);
 
-
-
-        glBindVertexArray(VAO);
+        glBindVertexArray(cubesVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, cubeTexture.ID);
         for(unsigned int i=0; i<10; i++){
             auto model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[i]);
@@ -207,19 +203,20 @@ int main()
 
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
-        // rendering pseudo-code
+        glBindVertexArray(0);
+        
+        glDepthFunc(GL_EQUAL);
+        skyboxShader.use();
+        view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
+        skyboxShader.setMat4("view",view);
+        skyboxShader.setMat4("projection", projection);
 
-        // update projection, view matrix to shader
-        // for each model:
-        //      bind VAO, texture
-        //      for each entity that belongs to the model:
-        //          update model(transformation) matrix to shader
-        //          glDrawArrays or glDrawElements
-
-
-
-
-
+        glBindVertexArray(skyBoxVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture.textureID);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        glDepthFunc(GL_LESS);
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
