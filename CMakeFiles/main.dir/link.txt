@@ -1,0 +1,1 @@
+/usr/bin/c++ -std=c++11 CMakeFiles/main.dir/src/main.cpp.o CMakeFiles/main.dir/home/martin/school/graphics-programming/assignments/glad.c.o -o build/main   -L/home/martin/school/graphics-programming/assignments/hw2/../../lib  -Wl,-rpath,/home/martin/school/graphics-programming/assignments/hw2/../../lib -lglfw -lrt -lm -ldl -lfreetype 
