@@ -10,6 +10,14 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+std::vector<std::string> skyboxTextureDay = {
+        "../resources/Sky Textures/right.jpg","../resources/Sky Textures/left.jpg","../resources/Sky Textures/bottom.jpg",
+        "../resources/Sky Textures/top.jpg","../resources/Sky Textures/front.jpg","../resources/Sky Textures/back.jpg"};
+
+std::vector<std::string> skyboxTextureNight = {
+        "../resources/Night Sky Textures/nightLeft.png","../resources/Night Sky Textures/nightRight.png","../resources/Night Sky Textures/nightBottom.png",
+        "../resources/Night Sky Textures/nightTop.png","../resources/Night Sky Textures/nightFront.png","../resources/Night Sky Textures/nightBack.png"};
+
 class CubemapTexture{
 public:
     unsigned int textureID;
@@ -17,9 +25,7 @@ public:
     int height;
     int channels;
 
-    CubemapTexture(std::vector<std::string> faces = {
-        "../resources/Sky Textures/right.jpg","../resources/Sky Textures/left.jpg","../resources/Sky Textures/top.jpg",
-        "../resources/Sky Textures/bottom.jpg","../resources/Sky Textures/front.jpg","../resources/Sky Textures/back.jpg"})
+    CubemapTexture(std::vector<std::string> faces)
     {
         if(faces.size() < 6){
             std::cout<<"Not enought faces for Cube Maps"<<std::endl;
@@ -32,7 +38,7 @@ public:
             if(data){
                 glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
             }else{
-                std::cout << "Failed to load texture" << std::endl;
+                std::cout << "Failed to load texture: "+faces[i] << std::endl;
             }
             stbi_image_free(data);
         }

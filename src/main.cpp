@@ -150,13 +150,15 @@ int main()
 
     // TODO : set texture & skybox texture uniform value (initialization)
     // e.g) shader.use(), shader.setInt("texture", 0);
-    CubemapTexture cubemapTexture;
+    CubemapTexture cubemapTexture(skyboxTextureDay);
+    CubemapTexture cubemapTextureNight(skyboxTextureNight);
 
     shader.use();
     shader.setInt("cubeTexture",0);
 
     skyboxShader.use();
-    skyboxShader.setInt("skyboxTexture",0);
+    skyboxShader.setInt("skyboxTexture1",0);
+    skyboxShader.setInt("skyboxTexture2",1);
 
     // render loop
     // -----------
@@ -214,6 +216,8 @@ int main()
         glBindVertexArray(skyBoxVAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture.textureID);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTextureNight.textureID);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
         glDepthFunc(GL_LESS);
