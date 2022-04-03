@@ -91,15 +91,34 @@ int main()
     unsigned int cubesVBO, cubesVAO;
     glGenVertexArrays(1,&cubesVAO);
     glGenBuffers(1, &cubesVBO);
-
     glBindVertexArray(cubesVAO);
-
     glBindBuffer(GL_ARRAY_BUFFER, cubesVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(cube_positions_textures), cube_positions_textures, GL_STATIC_DRAW);
-
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*sizeof(float),(void*)0);
-    
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)(3*sizeof(float)));
+
+
+    unsigned int groundVAO, groundVBO;
+    glGenVertexArrays(1, &groundVAO);
+    glGenBuffers(1, &groundVBO);
+    glBindVertexArray(groundVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, groundVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(ground_position_textures),ground_position_textures, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)(3*sizeof(float)));
+
+    unsigned int grassVAO, grassVBO, grassEBO;
+    glGenVertexArrays(1, &grassVAO);
+    glGenBuffers(1, &grassVBO);
+    glBindVertexArray(grassVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, grassVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(grass_positions_textures), grass_positions_textures, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)(3*sizeof(float)));
     
@@ -107,12 +126,9 @@ int main()
     unsigned int skyBoxVBO, skyBoxVAO;
     glGenVertexArrays(1, &skyBoxVAO);
     glGenBuffers(1, &skyBoxVBO);
-
     glBindVertexArray(skyBoxVAO);
-
     glBindBuffer(GL_ARRAY_BUFFER, skyBoxVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(skybox_positions), skybox_positions, GL_STATIC_DRAW);
-
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
@@ -130,6 +146,7 @@ int main()
         glm::vec3(-1.3f,  1.0f, -1.5f)
     };
 
+
     const int n_grass = 1000;
     float grassGroundSize = 20;
     glm::vec3 grassPositions[n_grass];
@@ -145,6 +162,8 @@ int main()
     }
 
     Texture cubeTexture("../resources/container.jpg");
+    Texture grassTexture("../resources/grass.png");
+    Texture grassGroundTexture("../resources/grass_ground.jpg");
 
     // TODO : define textures (container, grass, grass_ground) & cubemap textures (day, night)
 
@@ -154,7 +173,7 @@ int main()
     CubemapTexture cubemapTextureNight(skyboxTextureNight);
 
     shader.use();
-    shader.setInt("cubeTexture",0);
+    shader.setInt("texture1",0);
 
     skyboxShader.use();
     skyboxShader.setInt("skyboxTexture1",0);
@@ -205,6 +224,30 @@ int main()
 
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
+
+        glBindVertexArray(grassVAO);
+        glBindTexture(GL_TEXTURE_2D, grassTexture.ID);
+        for(unsigned int i=0; i<n_grass; i++){
+            auto model = glm::mat4(1.0f);
+            model = glm::translate(model, grassPositions[i]);
+            auto dirFromCamera = camera.Position-grassPositions[i];
+            dirFromCamera[1] = 0.0f;
+            glm::vec3 origLookAt(0.0f,0.0f,1.0f);
+            auto aux = glm::cross(origLookAt,dirFromCamera);
+            auto angle1 = glm::dot(origLookAt,dirFromCamera);
+            if(angle1 < 0.99990 && angle1 > -0.99990)
+                model = glm::rotate(model, angle1, aux);
+            shader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        
+        shader.setMat4("view", view);
+        glBindVertexArray(groundVAO);
+        glBindTexture(GL_TEXTURE_2D, grassGroundTexture.ID);
+        auto model = glm::mat4(1.0f);
+        shader.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
         glBindVertexArray(0);
         
         glDepthFunc(GL_EQUAL);
